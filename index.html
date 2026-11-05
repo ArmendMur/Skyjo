@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <script>
+    try {
+      document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem("color-scheme") ?? "light dark";
+    } catch {}
+  </script>
+  <title>SkyJo Punkteblock – Digitaler Punktezähler</title>
+  <meta name="description" content="Digitaler Punkteblock für SkyJo mit 100-Punkte-Verliergrenze, Spielerspeicher und Safari Display-Wachhalter.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SkyJo">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer fetchpriority="high"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand" id="brand-home" title="SkyJo Punkteblock">
+        <div class="brand-cards" aria-hidden="true">
+          <span class="mini-card mc-indigo">-2</span>
+          <span class="mini-card mc-blue">0</span>
+          <span class="mini-card mc-green">3</span>
+          <span class="mini-card mc-red">12</span>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">SkyJo</span>
+          <span class="brand-sub">Punkteblock</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <label class="wakelock-control" for="header-wakelock-switch" title="Verhindert, dass das Handy-Display in Safari ausgeht">
+          <span class="wakelock-dot" id="wakelock-dot" aria-hidden="true"></span>
+          <span class="wakelock-label" id="wakelock-status-text">Display an</span>
+          <input id="header-wakelock-switch" type="checkbox" switch checked>
+        </label>
+
+        <button type="button" class="icon-btn" id="open-players-btn" aria-label="Gespeicherte Spieler und Statistik öffnen" title="Gespeicherte Spieler &amp; Statistik">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </button>
+
+        <button type="button" class="icon-btn" id="open-settings-btn" aria-label="Einstellungen und Regeln öffnen" title="Einstellungen &amp; Regeln">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- ==================== VIEW 1: SPIEL EINRICHTEN ==================== -->
+    <section id="setup-view" class="view-section" aria-labelledby="setup-heading">
+      <!-- Banner falls ein laufendes Spiel im Hintergrund existiert -->
+      <div id="resume-game-banner" class="resume-banner" hidden>
+        <div class="resume-banner-text">
+          <strong>Laufendes Spiel pausiert</strong>
+          <span id="resume-banner-details">Runde 1</span>
+        </div>
+        <button type="button" class="btn btn-secondary btn-compact" id="resume-game-btn">Fortsetzen →</button>
+      </div>
+
+      <div class="hero-intro">
+        <h1 id="setup-heading">Neue SkyJo-Partie</h1>
+        <p>Wenigste Punkte gewinnen — sobald jemand <strong>100 Punkte</strong> erreicht, ist Schluss!</p>
+      </div>
+
+      <form id="setup-form" novalidate>
+        <!-- Schritt 1: Wie viele Spieler? -->
+        <div class="surface-card">
+          <fieldset class="count-fieldset">
+            <legend class="section-legend">Wie viele Spieler spielen mit?</legend>
+            <div class="count-pills" id="player-count-group">
+              <div class="count-option">
+                <input type="radio" id="count-2" name="playerCount" value="2" class="visually-hidden">
+                <label for="count-2">2</label>
+              </div>
+              <div class="count-option">
+                <input type="radio" id="count-3" name="playerCount" value="3" class="visually-hidden">
+                <label for="count-3">3</label>
+              </div>
+              <div class="count-option">
+                <input type="radio" id="count-4" name="playerCount" value="4" class="visually-hidden" checked>
+                <label for="count-4">4</label>
+              </div>
+              <div class="count-option">
+                <input type="radio" id="count-5" name="playerCount" value="5" class="visually-hidden">
+                <label for="count-5">5</label>
+              </div>
+              <div class="count-option">
+                <input type="radio" id="count-6" name="playerCount" value="6" class="visually-hidden">
+                <label for="count-6">6</label>
+              </div>
+              <div class="count-option">
+                <input type="radio" id="count-7" name="playerCount" value="7" class="visually-hidden">
+                <label for="count-7">7</label>
+              </div>
+              <div class="count-option">
+                <input type="radio" id="count-8" name="playerCount" value="8" class="visually-hidden">
+                <label for="count-8">8</label>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="target-score-row">
+            <div class="target-score-label-group">
+              <label for="target-score-input" class="field-label">Verlierbedingung (Punkte-Limit)</label>
+              <span class="field-hint" id="target-score-hint">Ab diesem Wert endet das Spiel sofort (Standard: 100).</span>
+            </div>
+            <div class="target-score-input-wrap">
+              <input
+                type="text"
+                id="target-score-input"
+                name="targetScore"
+                value="100"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                autocomplete="off"
+                autocorrect="off"
+                spellcheck="false"
+                aria-describedby="target-score-hint"
+                required
+              >
+              <span class="unit-suffix">Pkt.</span>
+              <button type="button" class="btn-chip-reset" id="reset-target-btn" hidden title="Zurück auf 100 Punkte">100</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schritt 2: Gespeicherte Spieler (Schnellauswahl + Löschen) -->
+        <div class="surface-card" id="saved-roster-card">
+          <div class="card-header-row">
+            <div>
+              <h2 class="card-title">Gespeicherte Spieler</h2>
+              <p class="card-subtitle" id="saved-roster-subtitle">Antippen zum Auswählen für diese Runde</p>
+            </div>
+            <button type="button" class="btn-text-action" id="toggle-delete-mode-btn" aria-pressed="false">
+              Spieler löschen
+            </button>
+          </div>
+
+          <div id="saved-chips-container" class="saved-chips" role="group" aria-label="Gespeicherte Spielernamen"></div>
+
+          <p id="saved-empty-hint" class="empty-roster-note" hidden>
+            Noch keine Namen gespeichert. Trage unten Namen für diese Runde ein (sie werden beim Start automatisch gespeichert) oder füge hier vorab Namen hinzu:
+          </p>
+
+          <div class="quick-add-row setup-quick-add">
+            <label for="setup-quick-add-input" class="visually-hidden">Spielernamen zur gespeicherten Liste hinzufügen</label>
+            <input
+              type="text"
+              id="setup-quick-add-input"
+              placeholder="Spielernamen merken (z. B. Alex)…"
+              maxlength="24"
+              autocomplete="off"
+              enterkeyhint="done"
+            >
+            <button type="button" class="btn btn-secondary btn-compact" id="setup-quick-add-btn">＋ Merken</button>
+          </div>
+        </div>
+
+        <!-- Schritt 3: Aktive Spielerfelder -->
+        <div class="surface-card">
+          <div class="card-header-row">
+            <div>
+              <h2 class="card-title">Spieler am Tisch (<span id="active-count-badge">4</span>)</h2>
+              <p class="card-subtitle">Namen hier eintragen – werden beim Start automatisch gespeichert</p>
+            </div>
+            <div class="slot-header-actions">
+              <button type="button" class="btn-text-action" id="clear-all-slots-btn" title="Alle Felder leeren">Leeren</button>
+              <button type="button" class="btn-text-action" id="shuffle-players-btn" title="Sitzreihenfolge zufällig mischen">🎲 Mischen</button>
+            </div>
+          </div>
+
+          <div id="player-slots-container" class="player-slots">
+            <div class="player-slot-row">
+              <span class="seat-badge seat-0" aria-hidden="true">1</span>
+              <div class="slot-input-wrapper">
+                <label for="player-slot-input-0" class="visually-hidden">Name von Spieler 1</label>
+                <input type="text" id="player-slot-input-0" name="player_0" placeholder="Spieler 1 – Name eingeben" maxlength="24" list="saved-players-datalist" enterkeyhint="next" autocomplete="off">
+              </div>
+            </div>
+            <div class="player-slot-row">
+              <span class="seat-badge seat-1" aria-hidden="true">2</span>
+              <div class="slot-input-wrapper">
+                <label for="player-slot-input-1" class="visually-hidden">Name von Spieler 2</label>
+                <input type="text" id="player-slot-input-1" name="player_1" placeholder="Spieler 2 – Name eingeben" maxlength="24" list="saved-players-datalist" enterkeyhint="next" autocomplete="off">
+              </div>
+            </div>
+            <div class="player-slot-row">
+              <span class="seat-badge seat-2" aria-hidden="true">3</span>
+              <div class="slot-input-wrapper">
+                <label for="player-slot-input-2" class="visually-hidden">Name von Spieler 3</label>
+                <input type="text" id="player-slot-input-2" name="player_2" placeholder="Spieler 3 – Name eingeben" maxlength="24" list="saved-players-datalist" enterkeyhint="next" autocomplete="off">
+              </div>
+            </div>
+            <div class="player-slot-row">
+              <span class="seat-badge seat-3" aria-hidden="true">4</span>
+              <div class="slot-input-wrapper">
+                <label for="player-slot-input-3" class="visually-hidden">Name von Spieler 4</label>
+                <input type="text" id="player-slot-input-3" name="player_3" placeholder="Spieler 4 – Name eingeben" maxlength="24" list="saved-players-datalist" enterkeyhint="done" autocomplete="off">
+              </div>
+            </div>
+          </div>
+          <datalist id="saved-players-datalist"></datalist>
+
+          <p id="setup-error-msg" class="form-error-banner" role="alert" hidden></p>
+
+          <div class="setup-submit-wrap">
+            <button type="submit" class="btn btn-primary btn-large btn-full" id="start-game-btn">
+              Spiel starten
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==================== VIEW 2: LAUFENDES SPIEL ==================== -->
+    <section id="game-view" class="view-section" aria-labelledby="game-heading" hidden>
+      <div class="game-top-bar">
+        <div class="game-meta">
+          <h1 id="game-heading" class="game-round-badge">Runde 1</h1>
+          <span class="game-limit-pill" id="game-limit-display">Verliergrenze: 100 Pkt.</span>
+        </div>
+        <div class="game-top-actions">
+          <button type="button" class="btn btn-secondary btn-compact" id="edit-last-round-btn" hidden title="Letzte Runde korrigieren">
+            ✎ Letzte Runde
+          </button>
+          <button type="button" class="btn btn-secondary btn-compact" id="new-game-top-btn">
+            Neues Spiel
+          </button>
+        </div>
+      </div>
+
+      <!-- Spielende-Banner (erscheint sobald >= 100 erreicht wurde) -->
+      <div id="game-over-banner" class="game-over-card" hidden>
+        <div class="game-over-header">
+          <span class="trophy-badge" aria-hidden="true">🏆</span>
+          <div>
+            <h2 id="banner-winner-title">Spiel beendet!</h2>
+            <p id="banner-loser-subtitle"></p>
+          </div>
+        </div>
+        <div class="game-over-actions">
+          <button type="button" class="btn btn-primary" id="banner-rematch-btn">🔄 Revanche (gleiche Spieler)</button>
+          <button type="button" class="btn btn-secondary" id="banner-change-players-btn">👥 Spieler ändern</button>
+        </div>
+      </div>
+
+      <!-- Aktuelle Rangliste & Fortschritt bis 100 -->
+      <div class="surface-card">
+        <div class="card-header-row">
+          <h2 class="card-title">Aktueller Stand</h2>
+          <span class="card-subtitle" id="leader-gap-hint">Niedrigste Punktzahl führt</span>
+        </div>
+        <div id="standings-list" class="standings-grid"></div>
+      </div>
+
+      <!-- Runden-Tabelle -->
+      <div class="surface-card">
+        <div class="card-header-row">
+          <div>
+            <h2 class="card-title">Rundenverlauf</h2>
+            <p class="card-subtitle" id="history-subtitle">Zeile antippen, um eine Runde zu korrigieren</p>
+          </div>
+        </div>
+
+        <div id="empty-rounds-state" class="empty-rounds">
+          <div class="empty-cards-illustration" aria-hidden="true">
+            <span class="skyjo-pill sp-neg">-2</span>
+            <span class="skyjo-pill sp-zero">0</span>
+            <span class="skyjo-pill sp-low">4</span>
+            <span class="skyjo-pill sp-mid">7</span>
+            <span class="skyjo-pill sp-high">12</span>
+          </div>
+          <p>Noch keine Runde eingetragen. Spielt eure erste Runde und tragt danach die Punkte ein!</p>
+        </div>
+
+        <div tabindex="0" role="region" aria-labelledby="history-table-caption" class="table-wrapper" id="history-table-wrapper" hidden>
+          <table id="history-table">
+            <caption id="history-table-caption" class="visually-hidden">Rundenverlauf aller Spieler</caption>
+            <thead id="history-thead"></thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Platzhalter für Sticky Bottom Action Bar -->
+      <div class="bottom-bar-spacer" aria-hidden="true"></div>
+
+      <div class="sticky-action-bar">
+        <div class="sticky-action-inner">
+          <button type="button" class="btn btn-primary btn-large btn-full" id="add-round-btn">
+            ＋ Runde 1 eintragen
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== DIALOG 1: RUNDE EINTRAGEN / BEARBEITEN ==================== -->
+  <dialog id="round-dialog" aria-labelledby="round-dialog-title">
+    <form id="round-form" method="dialog" novalidate>
+      <div class="dialog-header">
+        <div>
+          <h2 id="round-dialog-title">Runde 1 eintragen</h2>
+          <p class="dialog-subtitle">Tipp: Mit <strong>±</strong> gibst du schnell Minuspunkte ein</p>
+        </div>
+        <button type="button" class="icon-btn" id="close-round-dialog-btn" aria-label="Dialog schließen">✕</button>
+      </div>
+
+      <div class="dialog-body">
+        <!-- Optional: Wer hat die Runde beendet? (Offizielle SkyJo-Verdopplungsregel) -->
+        <div class="ender-box" id="ender-section">
+          <div class="ender-header">
+            <span class="ender-title">Wer hat zuerst alle Karten aufgedeckt? <span class="optional-tag">(optional)</span></span>
+          </div>
+          <div class="ender-chips" id="ender-chips-container" role="group" aria-label="Rundenbeender auswählen"></div>
+          <div id="doubling-live-notice" class="doubling-notice" hidden aria-live="polite"></div>
+        </div>
+
+        <!-- Punkte-Eingabefelder pro Spieler -->
+        <div id="round-inputs-container" class="round-inputs-list"></div>
+
+        <p id="round-form-error" class="form-error-banner" role="alert" hidden></p>
+      </div>
+
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-danger-ghost" id="delete-round-btn" hidden>Runde löschen</button>
+        <div class="dialog-footer-right">
+          <button type="button" class="btn btn-secondary" id="cancel-round-btn">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" id="save-round-btn">Punkte speichern</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ==================== DIALOG 2: SIEGEREHRUNG ==================== -->
+  <dialog id="winner-dialog" closedby="any" aria-labelledby="winner-dialog-title">
+    <div class="dialog-header">
+      <div>
+        <h2 id="winner-dialog-title">Spielende!</h2>
+        <p class="dialog-subtitle" id="winner-dialog-subtitle">100 Punkte wurden erreicht</p>
+      </div>
+      <button type="button" class="icon-btn" data-close-dialog="winner-dialog" aria-label="Dialog schließen">✕</button>
+    </div>
+
+    <div class="dialog-body">
+      <div class="winner-spotlight" id="winner-spotlight"></div>
+      <div class="final-ranking-list" id="final-ranking-list"></div>
+      <div class="match-highlights" id="match-highlights"></div>
+    </div>
+
+    <div class="dialog-footer winner-footer">
+      <button type="button" class="btn btn-primary btn-full" id="modal-rematch-btn">🔄 Sofort Revanche (gleiche Spieler)</button>
+      <div class="winner-secondary-row">
+        <button type="button" class="btn btn-secondary" id="modal-new-setup-btn">👥 Spieler ändern</button>
+        <button type="button" class="btn btn-secondary" data-close-dialog="winner-dialog">📊 Tabelle ansehen</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ==================== DIALOG 3: GESPEICHERTE SPIELER & STATISTIK ==================== -->
+  <dialog id="players-dialog" closedby="any" aria-labelledby="players-dialog-title">
+    <div class="dialog-header">
+      <div>
+        <h2 id="players-dialog-title">Gespeicherte Spieler</h2>
+        <p class="dialog-subtitle">Namen verwalten, seltene Gäste löschen &amp; Statistik</p>
+      </div>
+      <button type="button" class="icon-btn" data-close-dialog="players-dialog" aria-label="Dialog schließen">✕</button>
+    </div>
+
+    <div class="dialog-body">
+      <form id="quick-add-player-form" class="quick-add-row" novalidate>
+        <label for="quick-add-input" class="visually-hidden">Neuen Spieler speichern</label>
+        <input
+          type="text"
+          id="quick-add-input"
+          placeholder="Neuen Namen vorab speichern…"
+          maxlength="24"
+          enterkeyhint="done"
+        >
+        <button type="submit" class="btn btn-secondary">＋ Speichern</button>
+      </form>
+
+      <div id="saved-manager-list" class="saved-manager-list"></div>
+      <p id="saved-manager-empty" class="empty-roster-note" hidden>
+        Aktuell sind keine Spieler gespeichert.
+      </p>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="button" class="btn btn-danger-ghost" id="reset-stats-only-btn">Statistik zurücksetzen</button>
+      <button type="button" class="btn btn-primary" data-close-dialog="players-dialog">Fertig</button>
+    </div>
+  </dialog>
+
+  <!-- ==================== DIALOG 4: EINSTELLUNGEN & REGELN ==================== -->
+  <dialog id="settings-dialog" closedby="any" aria-labelledby="settings-dialog-title">
+    <div class="dialog-header">
+      <div>
+        <h2 id="settings-dialog-title">Einstellungen &amp; Regeln</h2>
+        <p class="dialog-subtitle">Anzeige, Safari-Wachhalter &amp; SkyJo-Regeln</p>
+      </div>
+      <button type="button" class="icon-btn" data-close-dialog="settings-dialog" aria-label="Dialog schließen">✕</button>
+    </div>
+
+    <div class="dialog-body settings-list">
+      <!-- Einstellung 1: Display-Wachhalter -->
+      <div class="setting-item">
+        <div class="setting-info">
+          <label for="settings-wakelock-switch" class="setting-title">Display nicht ausschalten (Safari / Mobil)</label>
+          <p class="setting-desc" id="settings-wakelock-detail">
+            Hält dein Handy-Display während des Spielens automatisch wach. Hinweis: Im iPhone-Stromsparmodus kann iOS das Abschalten erzwingen.
+          </p>
+        </div>
+        <input id="settings-wakelock-switch" type="checkbox" switch checked>
+      </div>
+
+      <!-- Einstellung 2: SkyJo Verdopplungs-Regel -->
+      <div class="setting-item">
+        <div class="setting-info">
+          <label for="settings-doubling-switch" class="setting-title">SkyJo-Verdopplungsregel prüfen</label>
+          <p class="setting-desc">
+            Wenn du angibst, wer die Runde beendet hat, prüft die App automatisch: Hat diese Person nicht allein die niedrigste Punktzahl (und mehr als 0 Punkte), zählen ihre Rundenpunkte doppelt.
+          </p>
+        </div>
+        <input id="settings-doubling-switch" type="checkbox" switch checked>
+      </div>
+
+      <!-- Einstellung 3: Farbschema (System / Hell / Dunkel) -->
+      <fieldset class="theme-fieldset">
+        <legend class="setting-title">Farbschema (Darstellung)</legend>
+        <div class="theme-segmented" id="theme-selector">
+          <div class="theme-opt">
+            <input type="radio" id="theme-system" name="colorSchemePref" value="system" class="visually-hidden" checked>
+            <label for="theme-system" id="theme-system-label">System</label>
+          </div>
+          <div class="theme-opt">
+            <input type="radio" id="theme-light" name="colorSchemePref" value="light" class="visually-hidden">
+            <label for="theme-light">☀️ Hell</label>
+          </div>
+          <div class="theme-opt">
+            <input type="radio" id="theme-dark" name="colorSchemePref" value="dark" class="visually-hidden">
+            <label for="theme-dark">🌙 Dunkel</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Kurzregeln -->
+      <details class="rules-accordion">
+        <summary>📖 Offizielle SkyJo-Punkteregeln kurz erklärt</summary>
+        <div class="rules-content">
+          <ul>
+            <li><strong>Ziel:</strong> So <em>wenige</em> Punkte wie möglich sammeln (Kartenwerte von <code>-2</code> bis <code>12</code>).</li>
+            <li><strong>Gleiche Spalte:</strong> 3 gleiche Zahlen untereinander in einer Spalte dürfen komplett abgelegt werden (0 Punkte für diese Spalte!).</li>
+            <li><strong>Rundenende &amp; Verdopplung:</strong> Wer seine letzte verdeckte Karte umdreht, läutet das Rundenende ein (alle anderen haben noch genau 1 Zug). Hat die Person, die beendet hat, danach <strong>nicht allein</strong> die niedrigste Punktzahl der Runde (Gleichstand reicht nicht!) und <strong>mehr als 0 Punkte</strong>, werden ihre Rundenpunkte <strong>verdoppelt</strong>. Bei 0 oder Minuspunkten wird nicht verdoppelt.</li>
+            <li><strong>Spielende ab 100 Punkten:</strong> Sobald mindestens eine Person <strong>100 oder mehr Punkte</strong> erreicht, endet das Spiel sofort. Es gewinnt die Person mit den <strong>wenigsten Gesamtpunkten</strong>!</li>
+            <li><strong>Tipp für Safari am iPhone:</strong> Über <em>Teilen → Zum Home-Bildschirm</em> kannst du diese Seite wie eine echte App auf deinem iPhone speichern.</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+
+    <div class="dialog-footer">
+      <button type="button" class="btn btn-primary btn-full" data-close-dialog="settings-dialog">Schließen</button>
+    </div>
+  </dialog>
+
+  <!-- ==================== TOAST FÜR RÜCKGÄNGIG & HINWEISE ==================== -->
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

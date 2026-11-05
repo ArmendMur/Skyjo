@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="cardBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="cardIndigo" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="cardGreen" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="cardYellow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+    <linearGradient id="cardRed" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- 4x3 SkyJo mini card grid -->
+  <g transform="translate(56, 78)" font-family="system-ui, -apple-system, sans-serif" font-weight="800" text-anchor="middle">
+    <!-- Row 1 -->
+    <rect x="0" y="0" width="90" height="108" rx="18" fill="url(#cardIndigo)" stroke="#fff" stroke-width="4"/>
+    <text x="45" y="68" font-size="40" fill="#fff">-2</text>
+
+    <rect x="103" y="0" width="90" height="108" rx="18" fill="url(#cardBlue)" stroke="#fff" stroke-width="4"/>
+    <text x="148" y="68" font-size="42" fill="#fff">0</text>
+
+    <rect x="206" y="0" width="90" height="108" rx="18" fill="url(#cardGreen)" stroke="#fff" stroke-width="4"/>
+    <text x="251" y="68" font-size="42" fill="#fff">3</text>
+
+    <rect x="309" y="0" width="90" height="108" rx="18" fill="url(#cardYellow)" stroke="#fff" stroke-width="4"/>
+    <text x="354" y="68" font-size="42" fill="#fff">7</text>
+
+    <!-- Row 2 -->
+    <rect x="0" y="124" width="90" height="108" rx="18" fill="url(#cardGreen)" stroke="#fff" stroke-width="4"/>
+    <text x="45" y="192" font-size="42" fill="#fff">1</text>
+
+    <rect x="103" y="124" width="90" height="108" rx="18" fill="url(#cardRed)" stroke="#fff" stroke-width="4"/>
+    <text x="148" y="192" font-size="38" fill="#fff">12</text>
+
+    <rect x="206" y="124" width="90" height="108" rx="18" fill="url(#cardIndigo)" stroke="#fff" stroke-width="4"/>
+    <text x="251" y="192" font-size="40" fill="#fff">-1</text>
+
+    <rect x="309" y="124" width="90" height="108" rx="18" fill="url(#cardGreen)" stroke="#fff" stroke-width="4"/>
+    <text x="354" y="192" font-size="42" fill="#fff">4</text>
+
+    <!-- Row 3 -->
+    <rect x="0" y="248" width="90" height="108" rx="18" fill="url(#cardYellow)" stroke="#fff" stroke-width="4"/>
+    <text x="45" y="316" font-size="42" fill="#fff">6</text>
+
+    <rect x="103" y="248" width="90" height="108" rx="18" fill="url(#cardBlue)" stroke="#fff" stroke-width="4"/>
+    <text x="148" y="316" font-size="42" fill="#fff">0</text>
+
+    <rect x="206" y="248" width="90" height="108" rx="18" fill="url(#cardGreen)" stroke="#fff" stroke-width="4"/>
+    <text x="251" y="316" font-size="42" fill="#fff">2</text>
+
+    <rect x="309" y="248" width="90" height="108" rx="18" fill="url(#cardRed)" stroke="#fff" stroke-width="4"/>
+    <text x="354" y="316" font-size="42" fill="#fff">9</text>
+  </g>
+</svg>

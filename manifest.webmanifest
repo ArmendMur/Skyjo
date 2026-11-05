@@ -1,0 +1,18 @@
+{
+  "name": "SkyJo Punktezähler",
+  "short_name": "SkyJo",
+  "description": "Digitaler Punkteblock für SkyJo mit Spielerspeicher, 100-Punkte-Limit und Display-Wachhalter.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "de",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
