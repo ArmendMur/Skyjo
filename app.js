@@ -79,7 +79,7 @@ const dom = {
   gameView: document.getElementById("game-view"),
 
   // Header & Wake Lock
-  headerWakeSwitch: document.getElementById("header-wakelock-switch"),
+  headerWakeBtn: document.getElementById("header-wakelock-btn"),
   settingsWakeSwitch: document.getElementById("settings-wakelock-switch"),
   wakeDot: document.getElementById("wakelock-dot"),
   wakeStatusText: document.getElementById("wakelock-status-text"),
@@ -211,13 +211,18 @@ let fallbackVideoEl = null;
 let wakeLockBlockedByOS = false;
 
 function updateWakeLockUI() {
-  dom.headerWakeSwitch.checked = state.settings.keepAwake;
+  dom.headerWakeBtn.setAttribute(
+    "aria-pressed",
+    state.settings.keepAwake ? "true" : "false"
+  );
   dom.settingsWakeSwitch.checked = state.settings.keepAwake;
 
   dom.wakeDot.classList.remove("is-active", "is-pending");
 
   if (!state.settings.keepAwake) {
-    dom.wakeStatusText.textContent = "Display: Aus";
+    dom.wakeStatusText.textContent = "Display aus";
+    dom.wakeDetailText.textContent =
+      "Ausgeschaltet: Dein Handy-Display geht nach der normalen Sperrzeit aus.";
     return;
   }
 
@@ -228,16 +233,16 @@ function updateWakeLockUI() {
 
   if (isLocked) {
     dom.wakeDot.classList.add("is-active");
-    dom.wakeStatusText.textContent = "Display wach";
+    dom.wakeStatusText.textContent = "Wach";
     dom.wakeDetailText.textContent =
       "Aktiv: Dein Handy-Display bleibt geöffnet, solange Safari im Vordergrund ist.";
   } else {
     dom.wakeDot.classList.add("is-pending");
     dom.wakeStatusText.textContent = wakeLockBlockedByOS
-      ? "Display (Sparmodus?)"
+      ? "Sparmodus"
       : "Display an";
     dom.wakeDetailText.textContent = wakeLockBlockedByOS
-      ? "Hinweis: iOS blockiert den Wachhalter eventuell wegen aktivem Stromsparmodus. Tippe auf den Bildschirm, um es erneut zu versuchen."
+      ? "Hinweis: Der iPhone-Stromsparmodus ist vermutlich aktiv – iOS blockiert dann das Wachhalten des Displays."
       : "Bereit: Wird beim nächsten Antippen sofort aktiviert, damit dein Display in Safari an bleibt.";
   }
 }
@@ -354,6 +359,26 @@ function updateSystemThemeLabel() {
   dom.themeSystemLabel.textContent = sysText;
 }
 
+function syncThemeColorMeta(scheme) {
+  const metas = document.querySelectorAll('meta[name="theme-color"]');
+  if (scheme === "dark") {
+    metas.forEach((m) => {
+      m.removeAttribute("media");
+      m.content = "#151f32";
+    });
+  } else if (scheme === "light") {
+    metas.forEach((m) => {
+      m.removeAttribute("media");
+      m.content = "#ffffff";
+    });
+  } else if (metas.length >= 2) {
+    metas[0].setAttribute("media", "(prefers-color-scheme: light)");
+    metas[0].content = "#ffffff";
+    metas[1].setAttribute("media", "(prefers-color-scheme: dark)");
+    metas[1].content = "#151f32";
+  }
+}
+
 function syncThemeControlsFromStorage() {
   let stored = null;
   try {
@@ -362,10 +387,12 @@ function syncThemeControlsFromStorage() {
   const meta = document.querySelector('meta[name="color-scheme"]');
   if (stored === "light" || stored === "dark") {
     meta.content = stored;
+    syncThemeColorMeta(stored);
     const radio = dom.themeSelector.querySelector(`input[value="${stored}"]`);
     if (radio) radio.checked = true;
   } else {
     meta.content = "light dark";
+    syncThemeColorMeta("system");
     const sysRadio = dom.themeSelector.querySelector('input[value="system"]');
     if (sysRadio) sysRadio.checked = true;
   }
@@ -376,11 +403,13 @@ function applyThemeChoice(choice) {
   const meta = document.querySelector('meta[name="color-scheme"]');
   if (choice === "light" || choice === "dark") {
     meta.content = choice;
+    syncThemeColorMeta(choice);
     try {
       localStorage.setItem(STORAGE_KEYS.COLOR_SCHEME, choice);
     } catch {}
   } else {
     meta.content = "light dark";
+    syncThemeColorMeta("system");
     try {
       localStorage.removeItem(STORAGE_KEYS.COLOR_SCHEME);
     } catch {}
@@ -621,7 +650,7 @@ function renderSetupRosterAndSlots() {
     );
     dom.toggleDeleteModeBtn.textContent = state.setup.deleteMode
       ? "Fertig"
-      : "Spieler löschen";
+      : "🗑 Löschen";
     dom.savedRosterSubtitle.textContent = state.setup.deleteMode
       ? "Tippe auf eine Person, um sie dauerhaft aus der Liste zu löschen:"
       : "Antippen zum Aus- oder Abwählen für diese Runde:";
@@ -1531,9 +1560,23 @@ function bindEvents() {
     });
   });
 
-  // Header-Buttons & Wake-Lock-Switches
-  dom.headerWakeSwitch.addEventListener("change", (e) => {
-    setKeepAwakePreference(e.target.checked);
+  // Header-Buttons & Wake-Lock-Steuerung
+  dom.headerWakeBtn.addEventListener("click", async () => {
+    const nextState = !state.settings.keepAwake;
+    state.settings.keepAwake = nextState;
+    saveJSON(STORAGE_KEYS.SETTINGS, state.settings);
+
+    if (nextState) {
+      await acquireWakeLock();
+      if (wakeLockBlockedByOS) {
+        showToast("⚡ iPhone-Stromsparmodus aktiv: iOS dimmt das Display trotzdem.");
+      } else {
+        showToast("☀️ Display bleibt während des Spielens eingeschaltet.");
+      }
+    } else {
+      await releaseWakeLock();
+      showToast("💤 Display-Wachhalter ausgeschaltet.");
+    }
   });
   dom.settingsWakeSwitch.addEventListener("change", (e) => {
     setKeepAwakePreference(e.target.checked);

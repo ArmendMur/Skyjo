@@ -4,9 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#151f32" media="(prefers-color-scheme: dark)">
   <script>
     try {
-      document.querySelector('meta[name="color-scheme"]').content = localStorage.getItem("color-scheme") ?? "light dark";
+      const savedScheme = localStorage.getItem("color-scheme");
+      if (savedScheme === "light" || savedScheme === "dark") {
+        document.querySelector('meta[name="color-scheme"]').content = savedScheme;
+      }
     } catch {}
   </script>
   <title>SkyJo Punkteblock – Digitaler Punktezähler</title>
@@ -38,11 +43,16 @@
       </div>
 
       <div class="header-actions">
-        <label class="wakelock-control" for="header-wakelock-switch" title="Verhindert, dass das Handy-Display in Safari ausgeht">
+        <button
+          type="button"
+          class="wakelock-btn"
+          id="header-wakelock-btn"
+          aria-pressed="true"
+          title="Hält das Handy-Display in Safari eingeschaltet (antippen zum Umschalten)"
+        >
           <span class="wakelock-dot" id="wakelock-dot" aria-hidden="true"></span>
-          <span class="wakelock-label" id="wakelock-status-text">Display an</span>
-          <input id="header-wakelock-switch" type="checkbox" switch checked>
-        </label>
+          <span class="wakelock-label" id="wakelock-status-text">Wach</span>
+        </button>
 
         <button type="button" class="icon-btn" id="open-players-btn" aria-label="Gespeicherte Spieler und Statistik öffnen" title="Gespeicherte Spieler &amp; Statistik">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -144,20 +154,18 @@
 
         <!-- Schritt 2: Gespeicherte Spieler (Schnellauswahl + Löschen) -->
         <div class="surface-card" id="saved-roster-card">
-          <div class="card-header-row">
-            <div>
-              <h2 class="card-title">Gespeicherte Spieler</h2>
-              <p class="card-subtitle" id="saved-roster-subtitle">Antippen zum Auswählen für diese Runde</p>
-            </div>
+          <div class="card-header-top">
+            <h2 class="card-title">Gespeicherte Spieler</h2>
             <button type="button" class="btn-text-action" id="toggle-delete-mode-btn" aria-pressed="false">
-              Spieler löschen
+              Löschen
             </button>
           </div>
+          <p class="card-subtitle card-subtitle-block" id="saved-roster-subtitle">Antippen zum Auswählen für diese Runde</p>
 
           <div id="saved-chips-container" class="saved-chips" role="group" aria-label="Gespeicherte Spielernamen"></div>
 
           <p id="saved-empty-hint" class="empty-roster-note" hidden>
-            Noch keine Namen gespeichert. Trage unten Namen für diese Runde ein (sie werden beim Start automatisch gespeichert) oder füge hier vorab Namen hinzu:
+            Noch keine Namen gespeichert. Trage unten Namen ein (werden beim Start automatisch gemerkt) oder speichere sie vorab hier:
           </p>
 
           <div class="quick-add-row setup-quick-add">
@@ -165,27 +173,25 @@
             <input
               type="text"
               id="setup-quick-add-input"
-              placeholder="Spielernamen merken (z. B. Alex)…"
+              placeholder="Name vorab merken…"
               maxlength="24"
               autocomplete="off"
               enterkeyhint="done"
             >
-            <button type="button" class="btn btn-secondary btn-compact" id="setup-quick-add-btn">＋ Merken</button>
+            <button type="button" class="btn btn-secondary quick-add-submit" id="setup-quick-add-btn">＋ Merken</button>
           </div>
         </div>
 
         <!-- Schritt 3: Aktive Spielerfelder -->
         <div class="surface-card">
-          <div class="card-header-row">
-            <div>
-              <h2 class="card-title">Spieler am Tisch (<span id="active-count-badge">4</span>)</h2>
-              <p class="card-subtitle">Namen hier eintragen – werden beim Start automatisch gespeichert</p>
-            </div>
+          <div class="card-header-top">
+            <h2 class="card-title">Spieler am Tisch (<span id="active-count-badge">4</span>)</h2>
             <div class="slot-header-actions">
               <button type="button" class="btn-text-action" id="clear-all-slots-btn" title="Alle Felder leeren">Leeren</button>
               <button type="button" class="btn-text-action" id="shuffle-players-btn" title="Sitzreihenfolge zufällig mischen">🎲 Mischen</button>
             </div>
           </div>
+          <p class="card-subtitle card-subtitle-block">Namen eintragen – werden beim Start automatisch gespeichert</p>
 
           <div id="player-slots-container" class="player-slots">
             <div class="player-slot-row">
